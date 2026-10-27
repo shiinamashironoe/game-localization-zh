@@ -49,7 +49,7 @@ npx skills add shiinamashironoe/game-localization-zh
 全域安裝（所有專案都能用）：
 
 ```bash
-npx skills add OWNER/game-localization-zh -g
+npx skills add shiinamashironoe/game-localization-zh -g
 ```
 
 ### 方法二：手動
