@@ -113,6 +113,28 @@ game-localization-zh/
 - 本 skill 提供方法與流程，不內建各引擎的解包工具；需要時 Agent 會先徵求你的同意再下載
 - 請只對你合法擁有的遊戲進行漢化，並遵守當地法律與原作者的授權條款
 
+## 字體相容性（v1.1+）
+
+漢化前先檢查遊戲字體畫不畫得出目標中文字，避免「文本全對、遊戲裡空白」：
+
+```bash
+python scripts/font_compat.py --game "<遊戲根目錄>" --report font_report.md
+```
+
+- **缺碼位**：瀏覽器回退系統字體 → 一行裡粗細混雜
+- **空字形**（cmap 有、輪廓為 0）：瀏覽器不回退，直接空白一格
+
+處理（自動備份 `gamefont.css` 與原字體）：
+
+```bash
+python scripts/font_patch.py --game "<遊戲根目錄>" --mode replace \
+    --font "assets/fonts/NotoSansSC-game.otf" --apply
+# 想保留原字體風格、只補洞：
+python scripts/font_patch.py --game "<遊戲根目錄>" --mode drop-empty --apply
+```
+
+自帶字體 `assets/fonts/NotoSansSC-game.otf` 是 Noto Sans SC 子集（GB2312＋假名＋標點，SIL OFL 1.1，約 2MB）；可用 `scripts/subset_font.py` 依遊戲實際字符重新裁切。
+
 ## 貢獻
 
 歡迎 Issue 與 PR，特別是：
