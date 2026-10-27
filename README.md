@@ -43,7 +43,7 @@
 ### 方法一：skills CLI（推薦）
 
 ```bash
-npx skills add OWNER/game-localization-zh
+npx skills add shiinamashironoe/game-localization-zh
 ```
 
 全域安裝（所有專案都能用）：
@@ -63,7 +63,7 @@ npx skills add OWNER/game-localization-zh -g
 | 其他 | 參考該 Agent 的 skills 文件 |
 
 ```bash
-git clone https://github.com/OWNER/game-localization-zh.git ~/.claude/skills/game-localization-zh
+git clone https://github.com/shiinamashironoe/game-localization-zh.git ~/.claude/skills/game-localization-zh
 ```
 
 ## 使用
@@ -133,4 +133,4 @@ game-localization-zh/
 
 It enforces a fan-translation-group workflow: persistent glossary / character sheets / style decisions / plot summary, scene-level translation, honorific and relationship-stage tracking, meme annotation `literal（explanation）`, setting-appropriate wording, translate → proofread → polish passes, control-code protection, and a stdlib-only validator script (`scripts/check_l10n.py`).
 
-Install: `npx skills add OWNER/game-localization-zh`
+Install: `npx skills add shiinamashironoe/game-localization-zh`
