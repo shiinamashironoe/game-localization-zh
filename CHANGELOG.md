@@ -2,6 +2,69 @@
 
 本專案遵循 [Semantic Versioning](https://semver.org/)。
 
+## [1.3.0] - 2026-10-28
+
+### 新增：開工前先查「有沒有現成漢化」＋補丁安全掃描
+
+第三個實戰專案（TyranoScript／DLsite 同人）暴露出一個更前面的浪費：**翻譯做到一半才發現官方早就出中文版**。這一版把「先查現成漢化」放進開工流程，並補上第三方補丁的安全閘門。
+
+設計原則：**只查、只報告，不下載、不代裝。** 查詢與掃描都在本地完成，不需要 API key。
+
+#### 一、`scripts/find_existing_l10n.py`（新）
+
+四個免 API key 的來源，全部實測可用：
+
+| 來源 | 查什麼 | 實測 |
+|---|---|---|
+| **DLsite** 作品頁 | 官方中文（簡/繁） | 依 `RJxxxxxx` 抓頁面，偵測 `中国語`／`繁体字` |
+| **Steam** `appdetails` / `storesearch` | 官方支援語言 | 回傳 `简体中文, 繁体中文`；自動跳過「体验版」條目 |
+| **VNDB** kana API（POST） | 該作品已有哪些語言版本（含民間補丁登記） | 例：`languages: ["ja","en",…,"zh-Hans","zh-Hant"]` |
+| **GitHub** search API | 公開倉庫型補丁、stars、活躍度 | `汉化 patch` → 246 筆結果 |
+
+輸出 `existing_l10n.md`：候選表（來源／類型／語言／置信度／風險級／連結）＋結論＋**手工搜尋連結**（2DFan／Bangumi／貼吧／Google，灰產站只給連結不自動抓）。
+
+作品識別：目錄名 → exe 檔名 → `version.txt`／`readme.txt`，優先取含 CJK 的；同時抓 `RJ` 號、`steam_appid.txt`、`appmanifest_*.acf`。標題不可靠時自動跳過 VNDB／GitHub 並在表裡說明原因，而不是靜默漏查。
+
+#### 二、`scripts/scan_patch_safety.py`（新）
+
+純標準庫靜態掃描，**不聯網、不需要防毒軟體**，輸出 A／B／C／D 四級並以退出碼表達（0／0／2／3）：
+
+| 檢查 | 內容 |
+|---|---|
+| 檔案類型 | magic bytes vs 副檔名（`.zip` 實際是 PE 之類） |
+| 壓縮包清單 | 可執行檔、雙重副檔名（`setup.txt.exe`）、隱藏檔、路徑穿越／絕對路徑 |
+| DLL 劫持 | `version.dll`、`winmm.dll`、`d3d9.dll` 等 15 個常見名 |
+| PE 特徵 | 簽章有無、節區數量、**節區熵 > 7.2 視為加殼** |
+| 字串掃描 | `powershell -enc`／`-EncodedCommand`、`certutil -urlcache`、`bitsadmin`、`mshta`、`reg add …un`、`schtasks`、`vssadmin delete`、`Invoke-Expression`、`FromBase64String`、`CreateRemoteThread`、超長 Base64、UNC 內網路徑 |
+
+分級與處置：
+
+- **A**：官方渠道（`--official`）或純資料 → 可用
+- **B**：只含遊戲資料／文本／圖片 → 可用
+- **C**：含可執行檔／安裝器，或無法解析 → **只給連結，不代安裝**
+- **D**：命中紅旗 → **拒絕協助安裝**（skill 明文規定沒有例外）
+
+實測：乾淨補丁 → A（exit 0）；`setup.txt.exe` ＋ `install.bat`（`-EncodedCommand`）→ D（exit 3）；`version.dll` → D（exit 3）。
+
+#### 三、`templates/disclaimer.md`（新）
+
+免責聲明＋使用者確認清單＋「拒絕安裝」話術。四條核心：不下載不分發、著作權狀態由使用者判斷、靜態掃描不能證明無毒、安裝風險自負。
+
+#### 四、SKILL.md 流程改動
+
+- 新增 **§0.05「先查有沒有現成漢化（開工第一件事）」**：三步（查 → 掃 → 三選一）、硬規則（不下載本體／不代下載補丁／D 級拒裝／灰產站只給連結）、命中率期待表。
+- **§0.0.1 開工簡報**多一行 `現成漢化：官方中文 有/無；民間補丁 n 個（最高 B/C 級）`。
+- **§0.3 開局 60 秒**、**§5 工作流程第 0 步**都插入「查現成漢化」。
+- 使用者選擇「即使有官方中文也要自己翻」時：照做但先講明是重複勞動，之後不再勸。
+
+### 驗證
+
+- `find_existing_l10n.py` 實測兩類作品：
+  - DLsite 冷門同人（RJ01208749）：DLsite 僅日文、VNDB 查無條目、GitHub 未見補丁 → 結論「按正常流程自己做」。
+  - Steam 有官方中文（千恋＊万花）：Steam 官方中文 簡/繁（A 級）、VNDB `zh-Hans/zh-Hant`（B 級）→ 結論「建議買官方」。
+- `scan_patch_safety.py` 三個樣本全數符合預期（A / D / D，退出碼 0 / 3 / 3），JSON 輸出可用於自動化。
+- 全部查詢皆有 timeout、失敗降級、`--no-network` 離線模式；不影響原有翻譯流程。
+
 ## [1.2.0] - 2026-10-28
 
 ### 新增：開局四查、進度提醒協議、一鍵／精修模式、失敗案例庫
