@@ -42,6 +42,8 @@
 - **進度提醒協議**：只要檢查清單還有未通過項，AI 每個回覆都會在最後一行提醒，直到全部 ✅
 - **一鍵／精修模式**：只要「全中文就好」的人回一句「啟動」即可，AI 自己跑完全程
 - **失敗案例庫**：8 個實戰踩過的坑與對應硬規則，新專案直接迴避
+- **成本預估與設置建議**（v1.4+）：四查完就在開工簡報裡給三檔預算（省／標準／精修）、每萬字 token 量級、推薦的子代理併發數與 reasoning 檔位；選精修會提醒划不划算。**是估算，不是報價**
+- **引擎層：RPG Maker MV/MZ**（v1.4+）：`engines/rpgmaker-mz/`，內含抽取／校驗／回寫／圖片解密重繪／字體／存檔／實機驅動共 17 個腳本，以及 MZ 專屬的坑與圖片 token 預算
 - **只用免費工具**：需要下載任何工具前，先向使用者說明用途並取得同意
 
 ## 先查有沒有現成漢化
@@ -145,8 +147,16 @@ game-localization-zh/
 │   ├── style.md
 │   ├── summary.md
 │   └── progress.md
-└── scripts/
-    └── check_l10n.py     # 自動驗證
+├── scripts/
+│   ├── check_l10n.py         # 自動驗證
+│   ├── find_existing_l10n.py # 查現成漢化
+│   ├── scan_patch_safety.py  # 補丁安全掃描
+│   └── font_compat.py …      # 字體相容性
+└── engines/                    # 引擎專用手法（選配，不替代 SKILL.md）
+    └── rpgmaker-mz/
+        ├── ENGINE.md           # RPG Maker MV/MZ 流水線與坑
+        ├── tools/              # 17 個腳本（RM_GAME 環境變數驅動）
+        └── templates/          # cfg.json 範本、批次翻譯指令模板
 ```
 
 ## 限制
