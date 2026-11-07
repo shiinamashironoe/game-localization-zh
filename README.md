@@ -3,7 +3,7 @@
 **讓 AI Agent 做遊戲漢化時，上下文連貫、角色語氣一致，讀起來像原生中文，而不是機翻。**
 
 一個免費、開源的 [Agent Skill](https://agentskills.io)，適用於 Claude Code、Gemini / Antigravity、Cursor、Codex 等支援 skills 的 AI Agent。
-支援日文 / 英文 → 簡體 / 繁體中文。｜v1.4.0｜[English](#english)
+支援日文 / 英文 → 簡體 / 繁體中文。｜v1.5.0｜[English](#english)
 
 ---
 
@@ -38,13 +38,14 @@
 |---|---|---|
 | …別に。ただ、ちょっと考え事してただけ | ……並不。只是，稍微在做思考的事情而已。 | ……沒什麼啦。只是在想點事情。 |
 
-## 核心功能（五項）
+## 核心功能（六項）
 
 - **專案記憶檔**：術語表、角色卡、風格決定、劇情摘要、進度。每批翻譯前必讀、翻完必更新，跨批次保持一致
 - **先查有沒有現成漢化**：開工前查 DLsite／Steam／VNDB／GitHub，官方有中文就別白做
 - **補丁安全掃描**：靜態紅旗檢查（可執行檔／DLL 劫持／加殼／編碼執行），D 級一律拒裝
 - **自動驗證腳本**：`scripts/check_l10n.py`，純標準庫，檢查控制碼、殘留假名、漏譯、行長、編碼缺字
 - **RPG Maker 專屬層**：`engines/rpgmaker-mz/`，從抽取到實機驗證的完整流水線
+- **R18 固定資源庫**（v1.5+）：`reference/nsfw/`，日→中色情詞表、台詞句式、LLM 提示詞包、外部詞典與工具轉換
 
 <details>
 <summary>其餘功能（展開）</summary>
@@ -197,6 +198,28 @@ python $E/verify_all.py           # 假名／日文助詞／控制碼／行寬
 
 詳細手法、11 條坑、圖片 token 預算見 [`engines/rpgmaker-mz/ENGINE.md`](engines/rpgmaker-mz/ENGINE.md)。
 
+## R18 資源庫（v1.5+）
+
+成人向作品最容易翻壞的兩件事：**詞彙臨床化／被模型偷偷淨化**，以及**同一詞三種譯法**。
+`reference/nsfw/` 是固定資源，不是臨時查詢：
+
+| 檔案 | 內容 |
+|---|---|
+| `lexicon.md` | 部位／行為／液體／狀態／擬聲／關係稱呼，約 180 條（含易錯對照），每條標三層語域（軟／標準／粗） |
+| `glossary-nsfw.csv` | 機讀種子表（137 條），可直接併入專案 `glossary.md` 或餵批次工具 |
+| `dialogue.md` | 八類功能句式（升溫／絕頂／求饒／命令／羞恥／挑逗／事後…）、描寫四拍、角色聲線矩陣 |
+| `prompt-pack.md` | 可直接貼的 System Prompt、術語注入法、批次流程、一致性抽檢、反例對照 |
+| `sources.md` | 下ネタ辞典、性風俗用語大辞典、Japanese Sex Terms、SakuraLLM、GalTransl、AiNiee、LinguaGacha |
+
+```bash
+# 轉成 SakuraLLM / GalTransl 的字典格式
+python scripts/glossary_to_dict.py reference/nsfw/glossary-nsfw.csv --format arrow
+# 只要標準層、輸出繁體、給 AiNiee 的兩欄 CSV
+python scripts/glossary_to_dict.py reference/nsfw/glossary-nsfw.csv --tier 標準 --variant traditional --format csv
+```
+
+> 詞表本身是譯法整理（語言對照），不複製外部詞典詞條；外部資源授權見 `sources.md`。
+
 ## 檔案結構
 
 ```
@@ -212,7 +235,15 @@ game-localization-zh/
 │   ├── check_l10n.py         # 自動驗證
 │   ├── find_existing_l10n.py # 查現成漢化
 │   ├── scan_patch_safety.py  # 補丁安全掃描
+│   ├── glossary_to_dict.py   # R18 術語表 → 工具字典格式
 │   └── font_compat.py …      # 字體相容性
+├── reference/nsfw/             # R18 固定資源庫（選配，讀 SKILL.md §3.6）
+│   ├── README.md               # 索引、三層語域、硬規則
+│   ├── lexicon.md              # 核心詞表
+│   ├── glossary-nsfw.csv       # 機讀種子表
+│   ├── dialogue.md             # 台詞句式與描寫四拍
+│   ├── prompt-pack.md          # System Prompt 與批次流程
+│   └── sources.md              # 外部詞典、模型、工具
 └── engines/                    # 引擎專用手法（選配，不替代 SKILL.md）
     └── rpgmaker-mz/
         ├── ENGINE.md           # RPG Maker MV/MZ 流水線與坑
@@ -303,6 +334,7 @@ Say to your agent: *"localize this game into Chinese"*. It replies `已載入gam
 - **Patch safety scan**: static red-flag analysis of third-party patches (executables, DLL hijacking, packers, encoded payloads), class D is refused outright
 - **Automated validator**: `scripts/check_l10n.py` (stdlib only) — entry count, control codes, untranslated lines, kana residue, line length, encoding coverage
 - **Cost estimate before you commit**: three tiers (lean / standard / polished) with per-10k-character token figures, plus recommended sub-agent concurrency and reasoning effort. **An estimate, not a quote.**
+- **R18 resource library** (v1.5+): `reference/nsfw/` — a tiered JA→ZH lexicon (soft / standard / vulgar), dialogue patterns, a jailbreak-free LLM prompt pack, and `scripts/glossary_to_dict.py` for GalTransl / SakuraLLM / AiNiee term dictionaries
 
 ### Limitations
 

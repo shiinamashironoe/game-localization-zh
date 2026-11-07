@@ -2,6 +2,43 @@
 
 本專案遵循 [Semantic Versioning](https://semver.org/)。
 
+## [1.5.0] - 2026-11-08
+
+### 新增：R18 固定翻譯資源庫（`reference/nsfw/`）
+
+做 R18 專案時，真正反覆出錯的不是「看不懂日文」，而是三件事：
+**同一詞每批換一種譯法**、**模型偷偷把性詞淨化成委婉語**、**譯者憑感覺現編詞導致角色聲線亂掉**。
+這次把詞表、句式、提示詞、外部詞典一次沉澱下來，不再每次從零問。
+
+#### 一、新增 `reference/nsfw/`（6 個檔案）
+
+| 檔案 | 內容 |
+|---|---|
+| `README.md` | 索引、三層語域（軟／標準／粗）、7 條硬規則、併入專案的三步 |
+| `lexicon.md` | 約 180 條：女性部位／男性部位／行為體位／液體／狀態感覺／擬聲擬態／關係稱呼，附繁中欄與易錯對照 |
+| `glossary-nsfw.csv` | 137 條機讀種子表（`原文,簡中,繁中,分層,類別,備註`） |
+| `dialogue.md` | 八類功能句式（升溫／絕頂／求饒／命令／羞恥／挑逗／事後…）、描寫四拍、節奏標點、聲線矩陣、禁忌 |
+| `prompt-pack.md` | 可直接貼的 System Prompt、術語注入法、六步批次流程、5 分鐘一致性抽檢、失敗症狀對照 |
+| `sources.md` | 下ネタ辞典＋Yomitan 版、性風俗用語大辞典、Japanese Sex Terms、Wiktionary、SakuraLLM／GalTransl／AiNiee／LinguaGacha，附授權界線 |
+
+#### 二、`scripts/glossary_to_dict.py`（新）
+
+把 CSV 種子表轉成批次工具吃的字典，純標準庫：
+
+```bash
+python scripts/glossary_to_dict.py reference/nsfw/glossary-nsfw.csv --format arrow   # 原文->譯文（SakuraLLM／GalTransl）
+python scripts/glossary_to_dict.py reference/nsfw/glossary-nsfw.csv --format csv     # 兩欄（AiNiee／LinguaGacha）
+```
+
+- `--tier 標準,粗` 篩層、`--category 部位` 篩類、`--variant traditional` 切繁中、`--tag-tier` 給人看
+- 同一原文兩種譯法直接報錯退出（exit 2），不讓不一致的表流進批次
+
+#### 三、主規範與模板
+
+- `SKILL.md` 新增 **§3.6 成人／R18 文本（固定資源庫）**：7 條硬規則＋檔案索引；開頭引擎段加一行指向
+- `templates/glossary.md` 新增「成人用詞（R18）」表（原文／分層／譯名／誰在用）
+- `templates/style.md` 的「成人內容尺度」從一行擴成四項：語域檔位、部位詞、擬聲詞、稱呼
+
 ## [1.4.0] - 2026-11-01
 
 ### 新增：成本預估（§0.0.2）＋ RPG Maker MV/MZ 引擎層
